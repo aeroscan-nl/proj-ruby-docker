@@ -1,22 +1,40 @@
-ARG PROJ_VERSION=9.1.0
+ARG PROJ_VERSION=9.1.1
+ARG RUBY_VERSION=3.2.0
 
-FROM osgeo/proj:${PROJ_VERSION}
+FROM ruby:${RUBY_VERSION}
 
 ARG PROJ_VERSION
-ARG RUBY_VERSION=2.7.4
-ARG DEBIAN_FRONTEND=noninteractive
+ARG RUBY_VERSION
 
 ENV RUBY_VERSION=${RUBY_VERSION}
 ENV PROJ_VERSION=${PROJ_VERSION}
 
-RUN apt-get update -q && \
-    apt-get install -qy procps curl ca-certificates gnupg2 build-essential --no-install-recommends && apt-get clean
+RUN apt-get update -y && apt-get install -y --fix-missing --no-install-recommends \
+    software-properties-common \
+    build-essential \
+    ca-certificates \
+    cmake \
+    wget \
+    unzip \
+    zlib1g-dev \
+    libsqlite3-dev \
+    sqlite3 \
+    libcurl4-gnutls-dev \
+    libtiff5-dev \
+    nodejs \
+    postgresql-client \
+    libgeos-dev \
+    libblas-dev \
+    liblapack-dev \
+    libf2c2-dev \
+    wkhtmltopdf
 
-RUN gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+RUN git clone --depth 1 --branch ${PROJ_VERSION} https://github.com/OSGeo/PROJ.git
 
-SHELL [ "/bin/bash", "-l", "-c" ]
-
-RUN curl -sSL https://get.rvm.io | bash -s stable
-
-RUN rvm install --default ruby-$RUBY_VERSION
+RUN cd PROJ \ 
+	&& mkdir build \
+	&& cd build \
+	&& cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+	&& make -j$(nproc) \
+	&& make install
 
