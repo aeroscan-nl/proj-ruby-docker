@@ -1,5 +1,5 @@
 ARG PROJ_VERSION=9.1.1
-ARG RUBY_VERSION=3.2.0
+ARG RUBY_VERSION=3.2.2-bullseye
 
 FROM ruby:${RUBY_VERSION}
 
@@ -28,7 +28,8 @@ RUN apt-get update -y && apt-get install -y --fix-missing --no-install-recommend
     liblapack-dev \
     libf2c2-dev \
     wkhtmltopdf \
-    curl
+    curl \ 
+    apt-utils
 
 RUN git clone --depth 1 --branch ${PROJ_VERSION} https://github.com/OSGeo/PROJ.git
 
@@ -39,9 +40,11 @@ RUN cd PROJ \
 	&& make -j$(nproc) \
 	&& make install
 
-RUN echo "deb https://apt.fullstaqruby.org debian-12 main" > /etc/apt/sources.list.d/fullstaq-ruby.list \
+RUN echo "deb https://apt.fullstaqruby.org debian-11 main" > /etc/apt/sources.list.d/fullstaq-ruby.list \
     && curl -SLfo /etc/apt/trusted.gpg.d/fullstaq-ruby.asc https://raw.githubusercontent.com/fullstaq-labs/fullstaq-ruby-server-edition/main/fullstaq-ruby.asc \
     && apt-get update -y && apt-get install -y --no-install-recommends \
     fullstaq-ruby-common \
     fullstaq-ruby-${RUBY_VERSION}\
     && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/usr/lib/fullstaq-ruby/versions/${RUBY_VERSION}/bin:$PATH"
